@@ -1,38 +1,254 @@
 <html lang="en">
+
 <head>
-  <title>Bootstrap Example</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <title>Cayo Perico</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
-<body>
 
-<div class="jumbotron text-center">
-  <h1>My First Bootstrap Page</h1>
-  <p>Resize this responsive page to see the effect!</p> 
-</div>
-  
-<div class="container">
-  <div class="row">
-    <div class="col-sm-4">
-      <h3>Column 1</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+<body onload="pageLoad()">
+    <div class="container">
+        <div class="row" id="bags">
+        </div>
     </div>
-    <div class="col-sm-4">
-      <h3>Column 2</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
-    </div>
-    <div class="col-sm-4">
-      <h3>Column 3</h3>        
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
-    </div>
-  </div>
-</div>
-
 </body>
+<script>
+    var Items = [
+        { "Name" : "Gold", "Value" : 332184, "Space" : 66, "Count": 0, "Taken": 0 },
+        { "Name" : "Cash", "Value" : 85000, "Space" : 25, "Count": 0, "Taken": 0 },
+        //{ "Name" : "Weed", "Value" : 147780, "Space" : 33, "Count": 0, "Taken": 0 },
+        { "Name" : "Painting", "Value" : 189500, "Space" : 50, "Count": 0, "Taken": 0 }
+    ];
+
+    var Primary = [
+      { "Name": "Sinsimito Tequila", "ValueEasy": 900000, "ValueHard": 990000 },
+      { "Name": "Ruby Necklace", "ValueEasy": 1000000, "ValueHard": 1100000 },
+      { "Name": "Bearer Bonds", "ValueEasy": 1100000, "ValueHard": 1210000 },
+      { "Name": "Pink Diamond", "ValueEasy": 1300000, "ValueHard": 1430000 },
+      { "Name": "Panther Statue", "ValueEasy": 1900000, "ValueHard": 2090000 }
+    ];
+
+    var Bags = [
+        { "Bag" : "0", "Value" : 0, "Space" : 100 },
+        { "Bag" : "1", "Value" : 0, "Space" : 100 },
+        { "Bag" : "2", "Value" : 0, "Space" : 100 }
+    ];
+
+    function getBagCount()
+    {
+        return document.getElementById("bagsCount").value;
+    }
+
+    function setTargetDetails()
+    {
+        $("#targetPayout").html(toMoney(getPrimaryTargetValue()));
+    }
+
+    function getPrimaryTargetValue()
+    {
+        let val = document.getElementById(`target`).value;
+        for(i = 0; i < Primary.length; i++)
+        {
+            if(Primary[i].Name == val)
+            {
+                let av = getMode() ? Primary[i].ValueHard : Primary[i].ValueEasy;
+                return av;
+            }
+        }
+        return 0;
+    }
+
+    function getMode()
+    {
+        return document.getElementById("hardMode").checked;
+    }
+
+    function setBags()
+    {
+        Bags = [];
+        for(i = 0; i < getBagCount(); i++)
+        {
+            Bags.push({ "Bag" : i, "Value" : 0, "Space" : 100 });
+        }
+    }
+
+    function addHeader(html, colsize)
+    {
+        return addCell(html, colsize, "", true);
+    }
+
+    function addCell(html, colsize, id="", header = false)
+    {
+        if(header)
+        {
+            html = `<b>${html}</b>`;
+        }
+        let idTag = id == "" ? "" : ` id="${id}"`;
+        return `<div class="col-xs-${colsize}"${idTag}>${html}</div>`;
+    }
+
+    function addRow(html)
+    {
+        return `<div class="row">${html}</div>`;
+    }
+
+    function addBreak()
+    {
+        return addRow(addCell("<hr></hr>", 12));
+    }
+    
+    function toMoney(val)
+    {
+        return `$${val.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+    }
+
+    function getItemValuePerSpace(item)
+    {
+        return (item.Value / item.Space).toFixed(2);
+    }
+
+    function update()
+    {
+        for(let x = 0; x < Items.length; x++)
+        {
+            let itemCount = document.getElementById(`itemCount_${Items[x].Name}`).value;
+            let itemLeft = Items[x].Space * itemCount;
+            for(i = 0; i < 3; i++)
+            {
+                itemLeft -= document.getElementById(`bag${i}_${Items[x].Name}`).value;
+            }
+            $(`#itemLeft_${Items[x].Name}`).html(itemLeft);
+        }
+
+        let bagsValue = 0;
+
+        for(i = 0; i < 3; i++)
+        {
+            let bagTaken = 0;
+            let bagValue = 0;
+            for(let x = 0; x < Items.length; x++)
+            {
+                let itemTaken = Number(document.getElementById(`bag${i}_${Items[x].Name}`).value);
+                bagTaken += itemTaken;
+                let value = itemTaken * getItemValuePerSpace(Items[x]);
+                bagValue += value;
+                $(`#bag${i}_${Items[x].Name}_Value`).html(toMoney(value));
+            }
+            bagsValue += bagValue;
+            $(`#bag${i}_Taken`).html(toMoney(bagTaken));
+            $(`#bag${i}_Value`).html(toMoney(bagValue));
+        }
+        let overall = 0;
+        overall += bagsValue + Number(getPrimaryTargetValue());
+        let fencing = Number(((overall / 100) * 10).toFixed(2));
+        let pavel = Number(((overall / 100) * 2).toFixed(2));
+
+        $(`#FeesFencing`).html(toMoney(fencing));
+        $(`#FeesPavel`).html(toMoney(pavel));
+        $(`#BagsTotal`).html(toMoney(bagsValue));
+        $(`#PrimaryTotal`).html(toMoney(Number(getPrimaryTargetValue())));
+
+        overall = overall - fencing - pavel;
+        $(`#OverallTotal`).html(toMoney(overall));
+    }
+
+    function pageLoad()
+    {
+        let html = "";
+        let section = "";
+        let combo = `<select id="target" onchange="setTargetDetails()">`;
+        for(i = 0; i < Primary.length; i++)
+        {
+            combo += `<option value="${Primary[i].Name}">${Primary[i].Name}</option>`;
+        }
+        combo += '</select>';
+        section = addHeader("Target", 4);
+        section += addHeader("Mode", 3);
+        section += addHeader("Payout", 3);
+        html += addRow(section);
+
+        section = addCell(combo, 4);
+        section += addCell(`<input type="checkbox" id="hardMode" onchange="setTargetDetails()"/>`, 3);
+        section += addCell("0", 3, "targetPayout");
+        html += addRow(section);
+
+        html += addBreak();
+
+        section = "";
+        section = addHeader("Item", 3);
+        section += addHeader("Amount", 3);
+        section += addHeader("% Left", 3);
+        section += addHeader("Value", 3);
+        html += addRow(section);
+
+        for(let x = 0; x < Items.length; x++)
+        {
+            section = "";
+            section = addCell(`${Items[x].Name}`, 3);
+            section += addCell(`<input id="itemCount_${Items[x].Name}" value="0" size="2" onchange="update()">`, 3);
+            section += addCell("0", 3, `itemLeft_${Items[x].Name}`);
+            section += addCell("0", 3, `itemValue_${Items[x].Name}`);
+            html += addRow(section);
+        }
+        section = "";
+        section = addCell(`Bags`, 3);
+        section += addCell(`<input id="bagsCount" value="0" size="2" onchange="update()">`, 3);
+        section += addCell("0", 3, `bagsLeft`);
+        section += addCell("0", 3, `bagsValue`);
+        html += addRow(section);
+
+        html += addBreak();
+
+        for(i = 0; i < 3; i++)
+        {
+            html += `<h4>Bag ${(i + 1)}</h4>`;
+            section = "";
+            section = addHeader("Item", 3);
+            section += addHeader("Amount", 3);
+            section += addHeader("Value", 3);
+            html += addRow(section);
+            for(let x = 0; x < Items.length; x++)
+            {
+                section = "";
+                section = addCell(Items[x].Name, 3);
+                section += addCell(`<input id="bag${i}_${Items[x].Name}" value="0" onchange="update()" size="2" />`, 3);
+                section += addCell("0", 3, `bag${i}_${Items[x].Name}_Value`);
+                html += addRow(section);
+            }
+            section = "";
+            section = addCell("Total", 3);
+            section += addCell(`0`, 3, `bag${i}_Taken`, 3);
+            section += addCell(`0`, 3, `bag${i}_Value`, 3);
+            html += addRow(section);
+        }
+        
+        html += addBreak();
+        section = "";
+        section = addCell("Overall", 4);
+        section += addCell("$0", 3, `OverallTotal`, 3);
+        html += addRow(section);
+        section = "";
+        section = addCell("Bags Total", 4);
+        section += addCell("$0", 3, `BagsTotal`, 3);
+        html += addRow(section);
+        section = "";
+        section = addCell("Primay", 4);
+        section += addCell("$0", 3, `PrimaryTotal`, 3);
+        html += addRow(section);
+        section = "";
+        section = addCell("Fencing", 4);
+        section += addCell("$0", 3, `FeesFencing`, 3);
+        html += addRow(section);
+        section = "";
+        section = addCell("Pavel", 4);
+        section += addCell("$0", 3, `FeesPavel`, 3);
+        html += addRow(section);
+        $("#bags").html(html);
+        setTargetDetails();
+    }
+</script>
+
 </html>
