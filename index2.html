@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Bootstrap Example</title>  <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <style>
+            .parent {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+.image1 {
+  position: relative;
+  top: 0;
+  left: 0;
+  border: 1px red solid;
+}
+.image2 {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  border: 1px green solid;
+}
+        </style>
+    </head>
+    <body onload="loadPage()">
+        <div class="parent" id="map">
+            <img class="image1" src="Untitled.png" />
+        </div>
+        <div id="modal"></div>
+    </body>
+
+    <script>
+        var Loots = [];
+        
+        var LootIconKeyGold = "g";
+        var LootIconKeyCash = "m";
+        var LootIconKeyPainting = "p";
+        var LootIconKeyCoke = "c";
+        var LootIconKeyWd = "w";
+        var LootIconKeyNone = "b";
+
+        var LootTypes = [
+            {"name": "Gold", "key": LootIconKeyGold, "totalSpace": 66, "totalValue": 332184, "valuePerSlot": 0},
+            {"name": "Cash", "key": LootIconKeyCash, "totalSpace": 25, "totalValue": 85000, "valuePerSlot": 0},
+            {"name": "Coke", "key": LootIconKeyCoke, "totalSpace": 50, "totalValue": 220095, "valuePerSlot": 0},
+            {"name": "Painting", "key": LootIconKeyPainting, "totalSpace": 50, "totalValue": 189500, "valuePerSlot": 0},
+            {"name": "Weed", "key": LootIconKeyWd, "totalSpace": 33, "totalValue": 147870, "valuePerSlot": 0},
+            {"name": "None", "key": LootIconKeyNone, "totalSpace": 0, "totalValue": 0, "valuePerSlot": 0}
+        ];
+
+        /*
+        Tequila 	$900,000 	$990,000
+Rubin-Halskette ( Ruby Necklace) 	$1,000,000 	$1,100,00
+Bearer bonds 	$1,100,000 	$1,210,000
+Pinker Diamant ( Pink Diamond) 	$1,300,000 	$1,430,000
+        */
+
+        function loadPage()
+        {
+            setupLoots();
+
+            let html = `<img class="image1" src="Untitled.png" />`;
+            let modal = ` data-toggle="modal" data-target="#myModal"`;
+            for(let i = 0; i < Loots.length; i++)
+            {                
+                html += `<img src="${LootIconKeyNone}.png" style="position: absolute; top: ${Loots[i].top}px; left: ${Loots[i].left}px;" id="${Loots[i].id}" onclick="modifyModal('${Loots[i].id}')" />`;
+            }
+            $("#map").html(html);
+        }
+
+        function updateLootIcon(lootIconKey, lootId)
+        {
+            $(`#${lootId}`).attr("src", `${lootIconKey}.png`);
+        }
+
+        function modifyModal(id)
+        {            
+            let html = `<div id="myModal" class="modal fade" role="dialog">`;
+            html += `<div class="modal-dialog">`;
+            html += `<!-- Modal content-->`;
+            html += `<div class="modal-content">`;
+            html += `<div class="modal-header">`;
+            html += `<button type="button" class="close" data-dismiss="modal">&times;</button>`;
+            html += `<h4 class="modal-title">${id}</h4>`;
+            html += `</div>`;
+            html += `<div class="modal-body">`;
+            html += `<p>Some text in the modal.</p>`;
+
+            html += `<select id="lootTypeSelect">`;
+            for(let i = 0; i < LootTypes.length; i++)
+            {
+                html += `<option value="${LootTypes[i].key}">${LootTypes[i].name}</option>`;
+            }
+            html += `</select>`;
+
+            html += `<button onclick="addLootDetails('${id}')">Add</button>`;
+
+            html += `</div>`;
+            html += `<div class="modal-footer">`;
+            html += `<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>`;
+            html += `</div>`;
+            html += `</div>`;
+            html += `</div>`;
+            html += `</div>`;
+            $("#modal").html(html);
+            $('#myModal').modal('toggle');
+        }
+
+        function addLootDetails(id)
+        {
+            let e = document.getElementById("lootTypeSelect");
+            let lootTypeKey = e.options[e.selectedIndex].value;
+            console.log(lootTypeKey);
+            //{"name": "Gold", "key": LootIconKeyGold, "totalSpace": 66, "totalValue": 332184, "valuePerSlot": 0},
+            //{"id" : `${i}_${ii}_${xx}`, "top" : top[i][ii], "left" : left[i][xx], "type": LootIconKeyNone, "total": 0, "cuts": []}
+            let lootType = getLootTypeByKey(lootTypeKey);
+            let loot = getLootById(id);
+            loot.type = lootType.key;
+            loot.total = 0;
+            loot.cuts = [];
+            updateLoot(id, loot);
+        }
+
+        function updateLoot(id, update)
+        {
+            for(let i = 0; i < Loots.length; i++)
+            {
+                if(Loots[i].id == id)
+                {
+                    Loots[i] = update;
+                    updateLootIcon(Loots[i].type, id)
+                    break;
+                }
+            }
+        }
+
+        function getLootById(id)
+        {
+            for(let i = 0; i < Loots.length; i++)
+            {
+                if(Loots[i].id == id)
+                {
+                    return Loots[i];
+                }
+            }
+            return null;
+        }
+
+        function getLootTypeByKey(key)
+        {
+            for(let i = 0; i < LootTypes.length; i++)
+            {
+                if(LootTypes[i].key == key)
+                {
+                    return LootTypes[i];
+                }
+            }
+            return null;
+        }
+
+        function setupLoots()
+        {
+            for(let i = 0; i < LootTypes.length; i++)
+            {
+                if(LootTypes[i].totalValue > 0)
+                {
+                    LootTypes[i].valuePerSlot = (LootTypes[i].totalValue / LootTypes[i].totalValue).toFixed(2);
+                }
+            }
+
+            let top =  [[15, 88],   [15, 88],   [170, 233], [170, 233]];
+            let left = [[15, 88],   [192, 265], [15, 88],   [192, 265]];
+
+            Loots = [];
+            for(let i = 0; i < top.length; i++)
+            {
+                for(let ii = 0; ii < 2; ii++)
+                {
+                    for(let xx = 0; xx < 2; xx++)
+                    {
+                        Loots.push({"id" : `${i}_${ii}_${xx}`, "top" : top[i][ii], "left" : left[i][xx], "type": LootIconKeyNone, "total": 0, "cuts": []});
+                    }
+                    /*
+                    html += `<img src="c.png" style="position: absolute; top: ${top[i][0]}px; left: ${left[x][0]}px;" />`;
+                    html += `<img src="c.png" style="position: absolute; top: ${top[i][0]}px; left: ${left[x][1]}px;" />`;
+                    html += `<img src="c.png" style="position: absolute; top: ${top[i][1]}px; left: ${left[x][0]}px;" />`;
+                    html += `<img src="c.png" style="position: absolute; top: ${top[i][1]}px; left: ${left[x][1]}px;" />`;
+                    */
+                }
+            }
+        }
+    </script>
+</html>
